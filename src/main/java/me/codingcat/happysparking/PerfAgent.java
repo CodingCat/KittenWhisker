@@ -162,10 +162,12 @@ public class PerfAgent {
 
   public static void premain(final String args, final Instrumentation instrumentation) {
     try {
+      /*
       String currentVMPID = ManagementFactory.getRuntimeMXBean().getName().split("@")[0];
       // attach to self
       VirtualMachine vm = VirtualMachine.attach(currentVMPID);
       vm.loadAgentPath();
+      */
     } catch (Exception e) {
       e.printStackTrace();
     }
