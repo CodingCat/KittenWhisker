@@ -5,6 +5,9 @@ import java.lang.instrument.Instrumentation;
 import java.lang.management.ManagementFactory;
 import java.util.UUID;
 
+import com.sun.tools.attach.AgentInitializationException;
+import com.sun.tools.attach.AgentLoadException;
+import com.sun.tools.attach.AttachNotSupportedException;
 import com.sun.tools.attach.VirtualMachine;
 
 public class PerfAgent {
@@ -137,11 +140,29 @@ public class PerfAgent {
   public static void premain(final String args, final Instrumentation instrumentation) {
     try {
       File f = findNativeLibrary();
-      String options = args;
-      String currentVMPID = ManagementFactory.getRuntimeMXBean().getName().split("@")[0];
       // attach to self
-      VirtualMachine vm = VirtualMachine.attach(currentVMPID);
-      vm.loadAgentPath(f.getAbsolutePath(), options);
+      new Thread() {
+        @Override
+        public void run() {
+          VirtualMachine vm;
+          int firstCommasPos = args.indexOf(',');
+          String options;
+          if (firstCommasPos > 0) {
+            options = args.substring(args.indexOf(',') + 1);
+          } else {
+            options = args;
+          }
+          String currentVMPID = ManagementFactory.getRuntimeMXBean().getName().split("@")[0];
+          int sleepTime = Integer.valueOf(args.split(",")[0]);
+          try {
+            Thread.sleep(sleepTime);
+            vm = VirtualMachine.attach(currentVMPID);
+            vm.loadAgentPath(f.getAbsolutePath(), options);
+          } catch (Exception e) {
+            e.printStackTrace();
+          }
+        }
+      }.start();
     } catch (Exception e) {
       e.printStackTrace();
     }
