@@ -139,7 +139,6 @@ public class PerfAgent {
 
   public static void premain(final String args, final Instrumentation instrumentation) {
     try {
-      File f = findNativeLibrary();
       // attach to self
       new Thread() {
         @Override
@@ -155,6 +154,7 @@ public class PerfAgent {
           String currentVMPID = ManagementFactory.getRuntimeMXBean().getName().split("@")[0];
           int sleepTime = Integer.valueOf(args.split(",")[0]);
           try {
+            File f = findNativeLibrary();
             Thread.sleep(sleepTime);
             vm = VirtualMachine.attach(currentVMPID);
             vm.loadAgentPath(f.getAbsolutePath(), options);
