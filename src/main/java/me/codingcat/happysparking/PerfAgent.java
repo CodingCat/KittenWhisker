@@ -106,11 +106,11 @@ public class PerfAgent {
 
   private static File findNativeLibrary() {
     // Load native library inside a jar file
-    String perfjNativeLibraryPath = "libperfmap.so";
-    boolean hasNativeLib = hasResource("libperfmap.so");
+    String perfjNativeLibraryPath = "/libperfmap.so";
+    boolean hasNativeLib = hasResource(perfjNativeLibraryPath);
 
     if (!hasNativeLib) {
-      throw new RuntimeException("no native library is found for perfj");
+      throw new RuntimeException("no native library is found for happysparking");
     }
 
     // Temporary folder for the native lib. Use the value of info.minzhou.perfj.tempdir or java.io.tmpdir
