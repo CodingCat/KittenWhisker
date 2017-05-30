@@ -28,14 +28,14 @@
                         <fileset>
                             <directory>out/</directory>
                             <includes>
-                                <include>*</include>
+                                <include>**/</include>
                             </includes>
                             <followSymlinks>false</followSymlinks>
                         </fileset>
                         <fileset>
                             <directory>CMakeFiles/</directory>
                             <includes>
-                                <include>*</include>
+                                <include>**/</include>
                             </includes>
                             <followSymlinks>false</followSymlinks>
                         </fileset>
@@ -69,6 +69,16 @@
                         <descriptorRef>jar-with-dependencies</descriptorRef>
                     </descriptorRefs>
                     <skipAssembly>true</skipAssembly>
+                    <archive>
+                        <index>true</index>
+                        <manifest>
+                            <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
+                            <addDefaultSpecificationEntries>true</addDefaultSpecificationEntries>
+                        </manifest>
+                        <manifestEntries>
+                            <Premain-Class>me.codingcat.happysparking.PerfAgent</Premain-Class>
+                        </manifestEntries>
+                    </archive>
                 </configuration>
                 <executions>
                     <execution>
