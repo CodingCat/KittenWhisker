@@ -104,7 +104,7 @@ public class PerfAgent {
     return ch2 == -1;
   }
 
-  private static File findNativeLibrary() {
+  private static File findNativeLibrary() throws IOException {
     // Load native library inside a jar file
     String perfjNativeLibraryPath = "/libperfmap.so";
     boolean hasNativeLib = hasResource(perfjNativeLibraryPath);
@@ -113,12 +113,11 @@ public class PerfAgent {
       throw new RuntimeException("no native library is found for happysparking");
     }
 
-    // Temporary folder for the native lib. Use the value of info.minzhou.perfj.tempdir or java.io.tmpdir
-    File tempFolder = new File(System.getProperty(System.getProperty("java.io.tmpdir")));
+    File tempFolder = new File(System.getProperty("java.io.tmpdir"));
     if (!tempFolder.exists()) {
       boolean created = tempFolder.mkdirs();
       if (!created) {
-        // if created == false, it will fail eventually in the later part
+        throw new IOException("cannot create tmp directory");
       }
     }
     // Extract and load a native library inside the jar file
