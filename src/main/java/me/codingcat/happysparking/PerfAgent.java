@@ -13,7 +13,10 @@ public class PerfAgent {
     return PerfAgent.class.getResource(path) != null;
   }
 
-  private static File extractLibraryFile(String libraryFileName, String targetFolder) {
+  private static File extractLibraryFile(
+      String libraryPath,
+      String libraryFileName,
+      String targetFolder) {
 
     String uuid = UUID.randomUUID().toString();
     String extractedLibFileName = String.format("happysparking-%s-%s", uuid, libraryFileName);
@@ -24,7 +27,7 @@ public class PerfAgent {
       InputStream reader = null;
       FileOutputStream writer = null;
       try {
-        reader = PerfAgent.class.getResourceAsStream(libraryFileName);
+        reader = PerfAgent.class.getResourceAsStream(libraryPath + libraryFileName);
         try {
           writer = new FileOutputStream(extractedLibFile);
 
@@ -60,7 +63,7 @@ public class PerfAgent {
         InputStream nativeIn = null;
         InputStream extractedLibIn = null;
         try {
-          nativeIn = PerfAgent.class.getResourceAsStream(libraryFileName);
+          nativeIn = PerfAgent.class.getResourceAsStream(libraryPath + libraryFileName);
           extractedLibIn = new FileInputStream(extractedLibFile);
 
           if (!contentsEquals(nativeIn, extractedLibIn)) {
@@ -106,8 +109,9 @@ public class PerfAgent {
 
   private static File findNativeLibrary() throws IOException {
     // Load native library inside a jar file
-    String perfjNativeLibraryPath = "/libperfmap.so";
-    boolean hasNativeLib = hasResource(perfjNativeLibraryPath);
+    String perfjNativeLibraryPath = "/";
+    String perfjNativeLibraryName = "libperfmap.so";
+    boolean hasNativeLib = hasResource(perfjNativeLibraryPath + perfjNativeLibraryName);
 
     if (!hasNativeLib) {
       throw new RuntimeException("no native library is found for happysparking");
@@ -121,7 +125,8 @@ public class PerfAgent {
       }
     }
     // Extract and load a native library inside the jar file
-    return extractLibraryFile(perfjNativeLibraryPath, tempFolder.getAbsolutePath());
+    return extractLibraryFile(perfjNativeLibraryPath, perfjNativeLibraryName,
+            tempFolder.getAbsolutePath());
   }
 
   // TODO: for running after VM start
