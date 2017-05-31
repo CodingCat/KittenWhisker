@@ -196,6 +196,8 @@ public class PerfAgent {
           try {
             File f = findNativeLibrary();
             System.out.println("================found library =========================");
+            System.out.println("================working Dir: " +
+                    System.getProperty("java.io.tmpdir") + "======================");
             Thread.sleep(waitingLength);
             System.out.println("================start generating symbol files ===========");
             vm = VirtualMachine.attach(currentVMPID);
