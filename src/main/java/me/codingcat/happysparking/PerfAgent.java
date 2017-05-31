@@ -166,7 +166,14 @@ public class PerfAgent {
   private static boolean uploadSymbolFile(String source, String targetDirectory) {
     try {
       FileSystem fs = FileSystem.get(new Configuration());
-      fs.copyFromLocalFile(new Path(source), new Path(targetDirectory));
+      Path targetDir = new Path(targetDirectory);
+      if (!fs.exists(targetDir)) {
+        boolean mkdirResult = fs.mkdirs(targetDir);
+        if (!mkdirResult) {
+          throw new IOException("cannot create directory " + targetDirectory);
+        }
+      }
+      fs.copyFromLocalFile(new Path(source), targetDir);
       return true;
     } catch (IOException ioe) {
       ioe.printStackTrace();
