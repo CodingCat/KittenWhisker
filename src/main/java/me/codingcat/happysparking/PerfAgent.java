@@ -140,8 +140,6 @@ public class PerfAgent {
   private static HashMap<String, Object> parseArgs(String args) {
     HashMap<String, Object> m = new HashMap<>();
     String[] argumentArray = args.split(",");
-    // 1. waitingLength
-    // 2. shared storage directory
     for (String arg: argumentArray) {
       String[] kvPair = arg.split("=");
       String key = kvPair[0];
@@ -189,15 +187,20 @@ public class PerfAgent {
         public void run() {
           VirtualMachine vm;
           HashMap<String, Object> argMap = parseArgs(args);
+          System.out.println("================finished paring argument===========");
           int waitingLength = (Integer) argMap.get("waitingLength");
           String targetDirectory = (String) argMap.get("targetDirectory");
           String options = (String) argMap.get("options");
           String currentVMPID = ManagementFactory.getRuntimeMXBean().getName().split("@")[0];
+          System.out.println("================attaching to " + currentVMPID + "===========");
           try {
             File f = findNativeLibrary();
+            System.out.println("================found library =========================");
             Thread.sleep(waitingLength);
+            System.out.println("================start generating symbol files ===========");
             vm = VirtualMachine.attach(currentVMPID);
             vm.loadAgentPath(f.getAbsolutePath(), options);
+            System.out.println("================DONE===========");
             boolean uploadSymbolFile =
                     uploadSymbolFile(System.getProperty("java.io.tmpdir") + "/perf-" +
                     currentVMPID + ".map", targetDirectory);
