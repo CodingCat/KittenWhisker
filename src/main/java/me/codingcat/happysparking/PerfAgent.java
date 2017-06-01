@@ -3,12 +3,14 @@ package me.codingcat.happysparking;
 import java.io.*;
 import java.lang.instrument.Instrumentation;
 import java.lang.management.ManagementFactory;
+import java.nio.file.*;
 import java.util.HashMap;
 import java.util.UUID;
 
 import com.sun.tools.attach.VirtualMachine;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.*;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 
 public class PerfAgent {
 
@@ -179,6 +181,22 @@ public class PerfAgent {
     }
   }
 
+  private static void moveGeneratedFileToCWD(int pid) {
+    String generatedPath = "/tmp/perf-" + pid + ".map";
+    String targetPath = System.getProperty("java.io.tmpdir") + "/perf-" + pid + ".map";
+    try {
+      File generatedFilePath = new File(generatedPath);
+      Files.move(generatedFilePath.toPath(), new File(targetPath).toPath(),
+              StandardCopyOption.ATOMIC_MOVE);
+    } catch (IOException ioe){
+      ioe.printStackTrace();
+      File f = new File(generatedPath);
+      if (f.exists()) {
+        f.delete();
+      }
+    }
+  }
+
   public static void premain(final String args, final Instrumentation instrumentation) {
     try {
       // TODO: use future
@@ -201,6 +219,7 @@ public class PerfAgent {
             vm = VirtualMachine.attach(currentVMPID);
             vm.loadAgentPath(f.getAbsolutePath(), options);
             System.out.println("================DONE===========");
+            moveGeneratedFileToCWD(Integer.valueOf(currentVMPID));
             boolean uploadSymbolFile =
                     uploadSymbolFile(System.getProperty("java.io.tmpdir") + "/perf-" +
                     currentVMPID + ".map", targetDirectory);
