@@ -3,12 +3,14 @@ package me.codingcat.happysparking;
 import java.io.*;
 import java.lang.instrument.Instrumentation;
 import java.lang.management.ManagementFactory;
+import java.nio.file.*;
+import java.util.HashMap;
 import java.util.UUID;
 
-import com.sun.tools.attach.AgentInitializationException;
-import com.sun.tools.attach.AgentLoadException;
-import com.sun.tools.attach.AttachNotSupportedException;
 import com.sun.tools.attach.VirtualMachine;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 
 public class PerfAgent {
 
@@ -137,31 +139,100 @@ public class PerfAgent {
     // int passedInPID = Integer.valueOf(args[0])
   }
 
+  private static HashMap<String, Object> parseArgs(String args) {
+    HashMap<String, Object> m = new HashMap<>();
+    String[] argumentArray = args.split(",");
+    for (String arg: argumentArray) {
+      String[] kvPair = arg.split("=");
+      String key = kvPair[0];
+      switch (key) {
+        case "waitingLength":
+          m.put(key, Integer.valueOf(kvPair[1]));
+          break;
+        case "targetDirectory":
+          m.put(key, kvPair[1]);
+          break;
+        default:
+          if (!m.containsKey("options")) {
+            m.put("options", "");
+          }
+          m.put("options", m.get("options") + "," + key);
+          break;
+      }
+    }
+    return m;
+  }
+
+  private static boolean uploadSymbolFile(String source, String targetDirectory) {
+    try {
+      FileSystem fs = FileSystem.get(new Configuration());
+      Path targetDir = new Path(targetDirectory);
+      if (!fs.exists(targetDir)) {
+        boolean mkdirResult = fs.mkdirs(targetDir);
+        if (!mkdirResult) {
+          throw new IOException("cannot create directory " + targetDirectory);
+        }
+      }
+      fs.copyFromLocalFile(new Path(source), targetDir);
+      return true;
+    } catch (IOException ioe) {
+      ioe.printStackTrace();
+      return false;
+    }
+  }
+
+  private static void moveGeneratedFileToCWD(int pid) {
+    String generatedPath = "/tmp/perf-" + pid + ".map";
+    String targetPath = System.getProperty("java.io.tmpdir") + "/perf-" + pid + ".map";
+    try {
+      File generatedFilePath = new File(generatedPath);
+      Files.move(generatedFilePath.toPath(), new File(targetPath).toPath(),
+              StandardCopyOption.REPLACE_EXISTING);
+    } catch (IOException ioe){
+      ioe.printStackTrace();
+      File f = new File(generatedPath);
+      if (f.exists()) {
+        f.delete();
+      }
+    }
+  }
+
   public static void premain(final String args, final Instrumentation instrumentation) {
     try {
-      // attach to self
+      // TODO: use future
       new Thread() {
         @Override
         public void run() {
           VirtualMachine vm;
-          int firstCommasPos = args.indexOf(',');
-          String options;
-          if (firstCommasPos > 0) {
-            options = args.substring(args.indexOf(',') + 1);
-          } else {
-            options = args;
-          }
+          HashMap<String, Object> argMap = parseArgs(args);
+          System.out.println("================finished paring argument===========");
+          int waitingLength = (Integer) argMap.get("waitingLength");
+          String targetDirectory = (String) argMap.get("targetDirectory");
+          String options = (String) argMap.get("options");
           String currentVMPID = ManagementFactory.getRuntimeMXBean().getName().split("@")[0];
-          int sleepTime = Integer.valueOf(args.split(",")[0]);
+          System.out.println("================attaching to " + currentVMPID + "===========");
           try {
             File f = findNativeLibrary();
-            Thread.sleep(sleepTime);
+            System.out.println("================found library =========================");
+            Thread.sleep(waitingLength);
+            System.out.println("================start generating symbol files ===========");
             vm = VirtualMachine.attach(currentVMPID);
             vm.loadAgentPath(f.getAbsolutePath(), options);
+            System.out.println("================DONE===========");
+            moveGeneratedFileToCWD(Integer.valueOf(currentVMPID));
+            boolean uploadSymbolFile =
+                    uploadSymbolFile(System.getProperty("java.io.tmpdir") + "/perf-" +
+                    currentVMPID + ".map", targetDirectory);
+            if (!uploadSymbolFile) {
+              throw new IOException("cannot upload symbol files for process " + currentVMPID);
+            }
           } catch (Exception e) {
             e.printStackTrace();
+            System.exit(1);
           }
         }
+        // upload symbol file
+
       }.start();
     } catch (Exception e) {
       e.printStackTrace();

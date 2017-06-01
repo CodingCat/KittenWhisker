@@ -321,8 +321,6 @@ jvmtiError set_callbacks(jvmtiEnv *jvmti) {
 
 JNIEXPORT jint JNICALL
 Agent_OnAttach(JavaVM *vm, char *options, void *reserved) {
-    open_map_file();
-
     unfold_simple = strstr(options, "unfoldsimple") != NULL;
     unfold_all = strstr(options, "unfoldall") != NULL;
     unfold_inlined_methods = strstr(options, "unfold") != NULL || unfold_simple || unfold_all;
@@ -330,6 +328,8 @@ Agent_OnAttach(JavaVM *vm, char *options, void *reserved) {
     print_source_loc = strstr(options, "sourcepos") != NULL;
     clean_class_names = strstr(options, "dottedclass") != NULL;
     debug_dump_unfold_entries = strstr(options, "debug_dump_unfold_entries") != NULL;
+
+    open_map_file();
 
     jvmtiEnv *jvmti;
     (*vm)->GetEnv(vm, (void **)&jvmti, JVMTI_VERSION_1);

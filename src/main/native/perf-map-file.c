@@ -20,6 +20,7 @@
 
 #include <sys/types.h>
 #include <stdio.h>
+#include <unistd.h>
 
 #include <error.h>
 #include <errno.h>
