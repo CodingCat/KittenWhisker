@@ -187,7 +187,7 @@ public class PerfAgent {
     try {
       File generatedFilePath = new File(generatedPath);
       Files.move(generatedFilePath.toPath(), new File(targetPath).toPath(),
-              StandardCopyOption.ATOMIC_MOVE);
+              StandardCopyOption.REPLACE_EXISTING);
     } catch (IOException ioe){
       ioe.printStackTrace();
       File f = new File(generatedPath);
