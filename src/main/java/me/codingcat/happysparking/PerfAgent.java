@@ -226,10 +226,11 @@ public class PerfAgent {
         l.add(str);
       }
       // add commands about pid and output file
-      l.add("-p");
-      l.add(String.valueOf(pid));
-      l.add("-o");
-      l.add(perfDataFilePath);
+      int indexOfCommand = l.indexOf("sleep");
+      l.add(indexOfCommand, "-p");
+      l.add(indexOfCommand + 1, String.valueOf(pid));
+      l.add(indexOfCommand + 2, "-o");
+      l.add(indexOfCommand + 3, perfDataFilePath);
       ProcessBuilder pb = new ProcessBuilder(l);
       Process proc = pb.start();
       proc.waitFor();
