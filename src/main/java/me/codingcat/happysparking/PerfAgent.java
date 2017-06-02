@@ -239,7 +239,9 @@ public class PerfAgent {
         System.out.print(str + " ");
       }
       System.out.println();
-      assert(proc.exitValue() == 0);
+      if (proc.exitValue() != 0) {
+        throw new Exception("process return with " + proc.exitValue());
+      }
     } catch(Exception e) {
       e.printStackTrace();
       System.exit(1);
