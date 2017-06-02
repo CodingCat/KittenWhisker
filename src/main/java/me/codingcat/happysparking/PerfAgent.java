@@ -234,6 +234,11 @@ public class PerfAgent {
       ProcessBuilder pb = new ProcessBuilder(l);
       Process proc = pb.start();
       proc.waitFor();
+      System.out.println("====");
+      for (String str: l) {
+        System.out.print(str + " ");
+      }
+      System.out.println();
       assert(proc.exitValue() == 0);
     } catch(Exception e) {
       e.printStackTrace();
