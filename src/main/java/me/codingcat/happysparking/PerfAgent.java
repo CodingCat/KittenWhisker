@@ -233,6 +233,19 @@ public class PerfAgent {
       l.add(indexOfCommand + 3, perfDataFilePath);
       ProcessBuilder pb = new ProcessBuilder(l);
       Process proc = pb.start();
+      new Thread() {
+        public void run() {
+          try {
+            String line;
+            BufferedReader reader = new BufferedReader(new InputStreamReader(proc.getErrorStream()));
+            while ((line = reader.readLine()) != null) {
+              System.out.println(line);
+            }
+          } catch (Exception e) {
+            e.printStackTrace();
+          }
+        }
+      }.start();
       proc.waitFor();
       System.out.println("====");
       for (String str: l) {
