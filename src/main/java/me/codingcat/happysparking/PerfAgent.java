@@ -190,13 +190,15 @@ public class PerfAgent {
 
   private static void moveGeneratedFileToCWD(int pid) {
     String generatedPath = "/tmp/perf-" + pid + ".map";
-    String targetPath = System.getProperty("java.io.tmpdir") + "/perf-" + pid + ".map";
     try {
+      String ipAddr = Utils.localHostName().getHostAddress();
+      String targetPath = System.getProperty("java.io.tmpdir") + "/" + ipAddr + "-perf-" + pid +
+              ".map";
       File generatedFilePath = new File(generatedPath);
       Files.move(generatedFilePath.toPath(), new File(targetPath).toPath(),
               StandardCopyOption.REPLACE_EXISTING);
-    } catch (IOException ioe){
-      ioe.printStackTrace();
+    } catch (Exception e){
+      e.printStackTrace();
       File f = new File(generatedPath);
       if (f.exists()) {
         f.delete();
@@ -268,8 +270,7 @@ public class PerfAgent {
       String ipAddr = Utils.localHostName().getHostAddress();
       perfDataFilePath = System.getProperty("java.io.tmpdir") + "/" + ipAddr + "-perf-" +
               pid + ".data";
-      symbolFilePath = System.getProperty("java.io.tmpdir") + "/" + ipAddr + "-perf-" + pid +
-              ".map";
+      symbolFilePath = "/tmp/perf-" + pid + ".map";
     } catch (Exception e) {
       e.printStackTrace();
       System.exit(1);
