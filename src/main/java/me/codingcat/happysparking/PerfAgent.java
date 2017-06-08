@@ -3,6 +3,8 @@ package me.codingcat.happysparking;
 import java.io.*;
 import java.lang.instrument.Instrumentation;
 import java.lang.management.ManagementFactory;
+import java.net.SocketException;
+import java.net.UnknownHostException;
 import java.nio.file.*;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -262,9 +264,16 @@ public class PerfAgent {
   }
 
   private static void setGlobalPaths(int pid) {
-    perfDataFilePath = System.getProperty("java.io.tmpdir") + "/executor-" +
-            String.valueOf(pid) + ".data";
-    symbolFilePath = System.getProperty("java.io.tmpdir") + "/perf-" + pid + ".map";
+    try {
+      String ipAddr = Utils.localHostName().getHostAddress();
+      perfDataFilePath = System.getProperty("java.io.tmpdir") + "/" + ipAddr + "-perf-" +
+              pid + ".data";
+      symbolFilePath = System.getProperty("java.io.tmpdir") + "/" + ipAddr + "-perf-" + pid +
+              ".map";
+    } catch (Exception e) {
+      e.printStackTrace();
+      System.exit(1);
+    }
   }
 
   private static void uploadFiles(String targetDirectory, int currentVMPID) {
