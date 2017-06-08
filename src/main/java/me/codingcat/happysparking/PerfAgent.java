@@ -3,6 +3,8 @@ package me.codingcat.happysparking;
 import java.io.*;
 import java.lang.instrument.Instrumentation;
 import java.lang.management.ManagementFactory;
+import java.net.SocketException;
+import java.net.UnknownHostException;
 import java.nio.file.*;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -188,13 +190,15 @@ public class PerfAgent {
 
   private static void moveGeneratedFileToCWD(int pid) {
     String generatedPath = "/tmp/perf-" + pid + ".map";
-    String targetPath = System.getProperty("java.io.tmpdir") + "/perf-" + pid + ".map";
     try {
+      String ipAddr = Utils.localHostName().getHostAddress();
+      String targetPath = System.getProperty("java.io.tmpdir") + "/" + ipAddr + "-perf-" + pid +
+              ".map";
       File generatedFilePath = new File(generatedPath);
       Files.move(generatedFilePath.toPath(), new File(targetPath).toPath(),
               StandardCopyOption.REPLACE_EXISTING);
-    } catch (IOException ioe){
-      ioe.printStackTrace();
+    } catch (Exception e){
+      e.printStackTrace();
       File f = new File(generatedPath);
       if (f.exists()) {
         f.delete();
@@ -262,9 +266,15 @@ public class PerfAgent {
   }
 
   private static void setGlobalPaths(int pid) {
-    perfDataFilePath = System.getProperty("java.io.tmpdir") + "/executor-" +
-            String.valueOf(pid) + ".data";
-    symbolFilePath = System.getProperty("java.io.tmpdir") + "/perf-" + pid + ".map";
+    try {
+      String ipAddr = Utils.localHostName().getHostAddress();
+      perfDataFilePath = System.getProperty("java.io.tmpdir") + "/" + ipAddr + "-perf-" +
+              pid + ".data";
+      symbolFilePath = "/tmp/perf-" + pid + ".map";
+    } catch (Exception e) {
+      e.printStackTrace();
+      System.exit(1);
+    }
   }
 
   private static void uploadFiles(String targetDirectory, int currentVMPID) {
@@ -311,7 +321,7 @@ public class PerfAgent {
             vm = VirtualMachine.attach(currentVMPID);
             vm.loadAgentPath(f.getAbsolutePath(), options);
             System.out.println("================DONE===========");
-            // moveGeneratedFileToCWD(pid);
+            moveGeneratedFileToCWD(pid);
             // uploadFiles(targetDirectory, pid);
           } catch (Exception e) {
             e.printStackTrace();

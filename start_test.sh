@@ -15,6 +15,5 @@ done
 
 for slave_ip in `echo $NODES|sed  "s/#.*$//;/^$/d"`; do
     echo $slave_ip
-    ssh $username@$slave_ip "sudo deluser yarn sudo"
     ssh $username@$slave_ip "sudo rm /etc/sudoers.d/yarn"
 done
