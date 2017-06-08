@@ -4,7 +4,9 @@ import java.io.*;
 import java.lang.instrument.Instrumentation;
 import java.lang.management.ManagementFactory;
 import java.nio.file.*;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.UUID;
 
 import com.sun.tools.attach.VirtualMachine;
@@ -13,6 +15,9 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 
 public class PerfAgent {
+
+  private static String perfDataFilePath;
+  private static String symbolFilePath;
 
   private static boolean hasResource(String path) {
     return PerfAgent.class.getResource(path) != null;
@@ -163,7 +168,7 @@ public class PerfAgent {
     return m;
   }
 
-  private static boolean uploadSymbolFile(String source, String targetDirectory) {
+  private static boolean uploadFileToSharedDirectory(String source, String targetDirectory) {
     try {
       FileSystem fs = FileSystem.get(new Configuration());
       Path targetDir = new Path(targetDirectory);
@@ -197,9 +202,91 @@ public class PerfAgent {
     }
   }
 
+  private static String getPerfParams(int pid) {
+    try {
+      FileInputStream perfConfFile = new FileInputStream("./perf.conf");
+      BufferedReader br = new BufferedReader(new InputStreamReader(perfConfFile));
+      String parameters = br.readLine();
+      assert (parameters != null);
+      return parameters;
+    } catch(Exception e) {
+      e.printStackTrace();
+      return null;
+    }
+  }
+
+  private static void startPerf(int pid) {
+    // 1. read the file containing the parameters for building parameters
+    try {
+      String parameters = getPerfParams(pid);
+      assert (parameters != null);
+      // 2. start the process to start perf program
+      List<String> l = new ArrayList<String>();
+      for (String str: parameters.split(" ")) {
+        l.add(str);
+      }
+      // add commands about pid and output file
+      int indexOfCommand = l.indexOf("sleep");
+      l.add(indexOfCommand, "-p");
+      l.add(indexOfCommand + 1, String.valueOf(pid));
+      l.add(indexOfCommand + 2, "-o");
+      l.add(indexOfCommand + 3, perfDataFilePath);
+      ProcessBuilder pb = new ProcessBuilder(l);
+      Process proc = pb.start();
+      new Thread() {
+        public void run() {
+          try {
+            String line;
+            BufferedReader reader = new BufferedReader(new InputStreamReader(proc.getErrorStream()));
+            while ((line = reader.readLine()) != null) {
+              System.out.println(line);
+            }
+          } catch (Exception e) {
+            e.printStackTrace();
+          }
+        }
+      }.start();
+      proc.waitFor();
+      System.out.println("====");
+      for (String str: l) {
+        System.out.print(str + " ");
+      }
+      System.out.println();
+      if (proc.exitValue() != 0) {
+        throw new Exception("process return with " + proc.exitValue());
+      }
+    } catch(Exception e) {
+      e.printStackTrace();
+      System.exit(1);
+    }
+  }
+
+  private static void setGlobalPaths(int pid) {
+    perfDataFilePath = System.getProperty("java.io.tmpdir") + "/executor-" +
+            String.valueOf(pid) + ".data";
+    symbolFilePath = System.getProperty("java.io.tmpdir") + "/perf-" + pid + ".map";
+  }
+
+  private static void uploadFiles(String targetDirectory, int currentVMPID) {
+    try {
+      boolean uploadPerfDataFile = uploadFileToSharedDirectory(perfDataFilePath, targetDirectory);
+      if (!uploadPerfDataFile) {
+        throw new IOException("cannot upload perf data files for process " + currentVMPID);
+      }
+      boolean uploadSymbolFile = uploadFileToSharedDirectory(symbolFilePath, targetDirectory);
+      if (!uploadSymbolFile) {
+        throw new IOException("cannot upload symbol files for process " + currentVMPID);
+      }
+    } catch (IOException ioe) {
+      ioe.printStackTrace();
+      System.exit(1);
+    }
+  }
+
   public static void premain(final String args, final Instrumentation instrumentation) {
     try {
       // TODO: use future
+      // fork a new process
       new Thread() {
         @Override
         public void run() {
@@ -210,22 +297,22 @@ public class PerfAgent {
           String targetDirectory = (String) argMap.get("targetDirectory");
           String options = (String) argMap.get("options");
           String currentVMPID = ManagementFactory.getRuntimeMXBean().getName().split("@")[0];
+          int pid =  Integer.valueOf(currentVMPID);
           System.out.println("================attaching to " + currentVMPID + "===========");
           try {
             File f = findNativeLibrary();
             System.out.println("================found library =========================");
+            setGlobalPaths(pid);
             Thread.sleep(waitingLength);
+            // start new process for linux perf
+            System.out.println("================starting linux perf =========================");
+            startPerf(pid);
             System.out.println("================start generating symbol files ===========");
             vm = VirtualMachine.attach(currentVMPID);
             vm.loadAgentPath(f.getAbsolutePath(), options);
             System.out.println("================DONE===========");
-            moveGeneratedFileToCWD(Integer.valueOf(currentVMPID));
-            boolean uploadSymbolFile =
-                    uploadSymbolFile(System.getProperty("java.io.tmpdir") + "/perf-" +
-                    currentVMPID + ".map", targetDirectory);
-            if (!uploadSymbolFile) {
-              throw new IOException("cannot upload symbol files for process " + currentVMPID);
-            }
+            // moveGeneratedFileToCWD(pid);
+            // uploadFiles(targetDirectory, pid);
           } catch (Exception e) {
             e.printStackTrace();
             System.exit(1);
