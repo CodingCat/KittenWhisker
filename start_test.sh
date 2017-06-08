@@ -8,7 +8,7 @@ NODES=`cat slaves`
 
 for slave_ip in `echo $NODES|sed  "s/#.*$//;/^$/d"`; do
     echo $slave_ip
-    ssh $username@$slave_ip "sudo adduser yarn sudo"
+    ssh $username@$slave_ip "echo 'yarn ALL=(ALL) NOPASSWD:/usr/bin/perf' | sudo tee --append /etc/sudoers.d/yarn"
 done
 
 . spark_app_cmd.sh
@@ -16,4 +16,5 @@ done
 for slave_ip in `echo $NODES|sed  "s/#.*$//;/^$/d"`; do
     echo $slave_ip
     ssh $username@$slave_ip "sudo deluser yarn sudo"
+    ssh $username@$slave_ip "sudo rm /etc/sudoers.d/yarn"
 done
