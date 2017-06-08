@@ -312,7 +312,7 @@ public class PerfAgent {
             vm.loadAgentPath(f.getAbsolutePath(), options);
             System.out.println("================DONE===========");
             moveGeneratedFileToCWD(pid);
-            uploadFiles(targetDirectory, pid);
+            // uploadFiles(targetDirectory, pid);
           } catch (Exception e) {
             e.printStackTrace();
             System.exit(1);
