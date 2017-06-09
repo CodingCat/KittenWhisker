@@ -11,7 +11,7 @@ public class StackTraceGenerator {
     String[] separatedByDash = dataFileName.split("-");
     String last = separatedByDash[separatedByDash.length - 1];
     System.out.println(last);
-    String[] pidAndSuffix = last.split(".");
+    String[] pidAndSuffix = last.split("\\.");
     return pidAndSuffix[0];
   }
 
