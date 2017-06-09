@@ -282,6 +282,19 @@ public class PerfAgent {
       ProcessBuilder pb = new ProcessBuilder();
       pb.command("sudo", "chmod", "+r", perfDataFilePath, symbolFilePath);
       Process p = pb.start();
+      new Thread() {
+        public void run() {
+          try {
+            String line;
+            BufferedReader reader = new BufferedReader(new InputStreamReader(p.getErrorStream()));
+            while ((line = reader.readLine()) != null) {
+              System.out.println(line);
+            }
+          } catch (Exception e) {
+            e.printStackTrace();
+          }
+        }
+      }.start();
       p.waitFor();
       if (p.exitValue() != 0) {
         throw new Exception("process return with " + p.exitValue());
