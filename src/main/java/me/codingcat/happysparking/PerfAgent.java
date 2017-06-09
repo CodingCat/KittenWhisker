@@ -3,8 +3,6 @@ package me.codingcat.happysparking;
 import java.io.*;
 import java.lang.instrument.Instrumentation;
 import java.lang.management.ManagementFactory;
-import java.net.SocketException;
-import java.net.UnknownHostException;
 import java.nio.file.*;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -188,7 +186,7 @@ public class PerfAgent {
     }
   }
 
-  private static void moveGeneratedFileToCWD(int pid) {
+  private static String moveSymbolFileToCWD(int pid) {
     String generatedPath = "/tmp/perf-" + pid + ".map";
     try {
       String ipAddr = Utils.localHostName().getHostAddress();
@@ -197,12 +195,14 @@ public class PerfAgent {
       File generatedFilePath = new File(generatedPath);
       Files.move(generatedFilePath.toPath(), new File(targetPath).toPath(),
               StandardCopyOption.REPLACE_EXISTING);
+      return targetPath;
     } catch (Exception e){
       e.printStackTrace();
       File f = new File(generatedPath);
       if (f.exists()) {
         f.delete();
       }
+      return null;
     }
   }
 
@@ -277,6 +277,34 @@ public class PerfAgent {
     }
   }
 
+  private static void addReadPermissionToFiles() {
+    try {
+      ProcessBuilder pb = new ProcessBuilder();
+      pb.command("sudo", "chmod", "+r", perfDataFilePath, symbolFilePath);
+      Process p = pb.start();
+      new Thread() {
+        public void run() {
+          try {
+            String line;
+            BufferedReader reader = new BufferedReader(new InputStreamReader(p.getErrorStream()));
+            while ((line = reader.readLine()) != null) {
+              System.out.println(line);
+            }
+          } catch (Exception e) {
+            e.printStackTrace();
+          }
+        }
+      }.start();
+      p.waitFor();
+      if (p.exitValue() != 0) {
+        throw new Exception("process return with " + p.exitValue());
+      }
+    } catch (Exception e){
+      e.printStackTrace();
+      System.exit(1);
+    }
+  }
+
   private static void uploadFiles(String targetDirectory, int currentVMPID) {
     try {
       boolean uploadPerfDataFile = uploadFileToSharedDirectory(perfDataFilePath, targetDirectory);
@@ -321,8 +349,9 @@ public class PerfAgent {
             vm = VirtualMachine.attach(currentVMPID);
             vm.loadAgentPath(f.getAbsolutePath(), options);
             System.out.println("================DONE===========");
-            moveGeneratedFileToCWD(pid);
-            // uploadFiles(targetDirectory, pid);
+            addReadPermissionToFiles();
+            symbolFilePath = moveSymbolFileToCWD(pid);
+            uploadFiles(targetDirectory, pid);
           } catch (Exception e) {
             e.printStackTrace();
             System.exit(1);
