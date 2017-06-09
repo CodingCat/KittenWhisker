@@ -4,9 +4,9 @@ set -x
 
 username="$1"
 
-shared_directory = "$2"
+shared_directory="$2"
 
-local_directory = "$3"
+local_directory="$3"
 
 NODES=`cat slaves`
 
