@@ -277,6 +277,21 @@ public class PerfAgent {
     }
   }
 
+  private static void addReadPermissionToFiles() {
+    try {
+      ProcessBuilder pb = new ProcessBuilder();
+      pb.command("chmod", "+r", perfDataFilePath, symbolFilePath);
+      Process p = pb.start();
+      p.waitFor();
+      if (p.exitValue() != 0) {
+        throw new Exception("process return with " + p.exitValue());
+      }
+    } catch (Exception e){
+      e.printStackTrace();
+      System.exit(1);
+    }
+  }
+
   private static void uploadFiles(String targetDirectory, int currentVMPID) {
     try {
       boolean uploadPerfDataFile = uploadFileToSharedDirectory(perfDataFilePath, targetDirectory);
@@ -322,7 +337,8 @@ public class PerfAgent {
             vm.loadAgentPath(f.getAbsolutePath(), options);
             System.out.println("================DONE===========");
             moveGeneratedFileToCWD(pid);
-            // uploadFiles(targetDirectory, pid);
+            addReadPermissionToFiles();
+            uploadFiles(targetDirectory, pid);
           } catch (Exception e) {
             e.printStackTrace();
             System.exit(1);
