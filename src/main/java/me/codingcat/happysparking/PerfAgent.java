@@ -336,8 +336,8 @@ public class PerfAgent {
             vm = VirtualMachine.attach(currentVMPID);
             vm.loadAgentPath(f.getAbsolutePath(), options);
             System.out.println("================DONE===========");
-            moveGeneratedFileToCWD(pid);
             addReadPermissionToFiles();
+            moveGeneratedFileToCWD(pid);
             uploadFiles(targetDirectory, pid);
           } catch (Exception e) {
             e.printStackTrace();
