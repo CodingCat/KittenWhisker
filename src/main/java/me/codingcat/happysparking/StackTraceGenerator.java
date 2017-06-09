@@ -46,7 +46,7 @@ public class StackTraceGenerator {
       // 3. run perf script
       ProcessBuilder pb = new ProcessBuilder(
               "sudo", "perf", "script", "-i",
-              localPath + "/" + dataFileName, ">", localPath + "/" + outputStackFileName(dataFileName));
+              localPath + "/" + dataFileName, ">" + localPath + "/" + outputStackFileName(dataFileName));
       Process p = pb.start();
       new Thread() {
         public void run() {
