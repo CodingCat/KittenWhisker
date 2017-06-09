@@ -4,8 +4,12 @@ import java.io.File;
 import java.io.FilenameFilter;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
+import java.util.ArrayList;
+import java.util.List;
 
 public class StackTraceGenerator {
+
+  private List<String> filesToBeCleaned = new ArrayList<>();
 
   private String getPIDFromFileName(String dataFileName) {
     String[] separatedByDash = dataFileName.split("-");
@@ -17,13 +21,13 @@ public class StackTraceGenerator {
 
   private String deriveSymbolFileName(String dataFileName) {
     int lastDotIndex = dataFileName.lastIndexOf(".");
-    String prefix = dataFileName.substring(0, lastDotIndex + 1);
+    String prefix = dataFileName.substring(0, lastDotIndex);
     return prefix + ".map";
   }
 
   private String outputStackFileName(String dataFileName) {
     int lastDotIndex = dataFileName.lastIndexOf(".");
-    String prefix = dataFileName.substring(0, lastDotIndex + 1);
+    String prefix = dataFileName.substring(0, lastDotIndex);
     return prefix + ".stack";
   }
 
@@ -33,9 +37,10 @@ public class StackTraceGenerator {
       String pid = getPIDFromFileName(dataFileName);
       String symbolFileName = deriveSymbolFileName(dataFileName);
       // 2. move map file to /tmp/pid.map
-      Files.move(new File(localPath + "/" + symbolFileName).toPath(),
+      Files.copy(new File(localPath + "/" + symbolFileName).toPath(),
               new File("/tmp/" + pid + ".map").toPath(),
               StandardCopyOption.REPLACE_EXISTING);
+      filesToBeCleaned.add("/tmp/" + pid + ".map");
       // 3. run perf script
       ProcessBuilder pb = new ProcessBuilder(
               "sudo", "perf", "script", "-i",
@@ -51,8 +56,26 @@ public class StackTraceGenerator {
     }
   }
 
+  private void registerShutdownHook() {
+    Runtime.getRuntime().addShutdownHook(new Thread() {
+      public void run() {
+        try {
+          for (String file : filesToBeCleaned) {
+            File f = new File(file);
+            if (f.exists()) {
+              Files.delete(new File(file).toPath());
+            }
+          }
+        } catch (Exception e) {
+          e.printStackTrace();
+        }
+      }
+    });
+  }
+
   public static void main(String[] args) {
     StackTraceGenerator traceGenerator = new StackTraceGenerator();
+    traceGenerator.registerShutdownHook();
     String localDirectory = args[0];
     File localDir = new File(localDirectory);
     if (localDir.isDirectory()) {
