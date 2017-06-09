@@ -3,8 +3,6 @@ package me.codingcat.happysparking;
 import java.io.*;
 import java.lang.instrument.Instrumentation;
 import java.lang.management.ManagementFactory;
-import java.net.SocketException;
-import java.net.UnknownHostException;
 import java.nio.file.*;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -188,7 +186,7 @@ public class PerfAgent {
     }
   }
 
-  private static void moveGeneratedFileToCWD(int pid) {
+  private static String moveSymbolFileToCWD(int pid) {
     String generatedPath = "/tmp/perf-" + pid + ".map";
     try {
       String ipAddr = Utils.localHostName().getHostAddress();
@@ -197,12 +195,14 @@ public class PerfAgent {
       File generatedFilePath = new File(generatedPath);
       Files.move(generatedFilePath.toPath(), new File(targetPath).toPath(),
               StandardCopyOption.REPLACE_EXISTING);
+      return targetPath;
     } catch (Exception e){
       e.printStackTrace();
       File f = new File(generatedPath);
       if (f.exists()) {
         f.delete();
       }
+      return null;
     }
   }
 
@@ -337,7 +337,7 @@ public class PerfAgent {
             vm.loadAgentPath(f.getAbsolutePath(), options);
             System.out.println("================DONE===========");
             addReadPermissionToFiles();
-            moveGeneratedFileToCWD(pid);
+            symbolFilePath = moveSymbolFileToCWD(pid);
             uploadFiles(targetDirectory, pid);
           } catch (Exception e) {
             e.printStackTrace();
