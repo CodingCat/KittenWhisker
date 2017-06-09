@@ -45,7 +45,7 @@ public class StackTraceGenerator {
       filesToBeCleaned.add("/tmp/" + pid + ".map");
       // 3. run perf script
       ProcessBuilder pb = new ProcessBuilder(
-              "sudo", "perf", "script", "-i",
+              "perf", "script", "-i",
               localPath + "/" + dataFileName);
       pb.redirectOutput(new File(localPath + "/" + outputStackFileName(dataFileName)));
       Process p = pb.start();
