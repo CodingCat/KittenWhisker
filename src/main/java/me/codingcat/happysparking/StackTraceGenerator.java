@@ -46,21 +46,9 @@ public class StackTraceGenerator {
       // 3. run perf script
       ProcessBuilder pb = new ProcessBuilder(
               "sudo", "perf", "script", "-i",
-              localPath + "/" + dataFileName, ">" + localPath + "/" + outputStackFileName(dataFileName));
+              localPath + "/" + dataFileName);
+      pb.redirectOutput(new File(localPath + "/" + outputStackFileName(dataFileName)));
       Process p = pb.start();
-      new Thread() {
-        public void run() {
-          try {
-            String line;
-            BufferedReader reader = new BufferedReader(new InputStreamReader(p.getErrorStream()));
-            while ((line = reader.readLine()) != null) {
-              System.out.println(line);
-            }
-          } catch (Exception e) {
-            e.printStackTrace();
-          }
-        }
-      }.start();
       p.waitFor();
       if (p.exitValue() != 0) {
          throw new Exception("process returns with " + p.exitValue());
