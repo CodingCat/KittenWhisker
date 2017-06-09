@@ -40,9 +40,9 @@ public class StackTraceGenerator {
       String symbolFileName = deriveSymbolFileName(dataFileName);
       // 2. move map file to /tmp/pid.map
       Files.copy(new File(localPath + "/" + symbolFileName).toPath(),
-              new File("/tmp/" + pid + ".map").toPath(),
+              new File("/tmp/perf-" + pid + ".map").toPath(),
               StandardCopyOption.REPLACE_EXISTING);
-      filesToBeCleaned.add("/tmp/" + pid + ".map");
+      filesToBeCleaned.add("/tmp/perf-" + pid + ".map");
       // 3. run perf script
       ProcessBuilder pb = new ProcessBuilder(
               "perf", "script", "-i",
