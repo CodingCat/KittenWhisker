@@ -10,6 +10,7 @@ public class StackTraceGenerator {
   private String getPIDFromFileName(String dataFileName) {
     String[] separatedByDash = dataFileName.split("-");
     String last = separatedByDash[separatedByDash.length - 1];
+    System.out.println(last);
     String[] pidAndSuffix = last.split(".");
     return pidAndSuffix[0];
   }
