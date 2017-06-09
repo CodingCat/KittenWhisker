@@ -280,7 +280,7 @@ public class PerfAgent {
   private static void addReadPermissionToFiles() {
     try {
       ProcessBuilder pb = new ProcessBuilder();
-      pb.command("chmod", "+r", perfDataFilePath, symbolFilePath);
+      pb.command("sudo", "chmod", "+r", perfDataFilePath, symbolFilePath);
       Process p = pb.start();
       p.waitFor();
       if (p.exitValue() != 0) {
