@@ -4,23 +4,28 @@
  It generates symbol files for JIT compiled methods of Drivers and Executors which can be further
   used by Linux [`perf`](https://perf.wiki.kernel.org/index.php/Main_Page) tools.
 
-## Configure KittenWhisker
+In this file, I will show how to <a name="configure">configure</a> and use KittenWhisker.
+ 
+ 
+ 
+ 
 
+## [Configure KittenWhisker](#configure)
 
 ### Prepare Slaves File
 
 Before you install KittenWhisker, you have to prepare a `slaves` files containing IP address of all nodes
  in your cluster (or all nodes which can be used to run Spark Drivers/Executors)
-
-### Clone KittenWhisker repository and compile it
+ 
+### Clone KittenWhisker repository and install it
 
 1. First you have to clone the repo from github
 
-`git clone https://github.com/CodingCat/HappySparking.git`
+`git clone https://github.com/CodingCat/KittenWhisker.git`
 
-2. Then you can compile it with maven (ensure that you installed cmake beforehand) 
+2. Then you can compile it with maven (ensure that you installed `cmake` beforehand) 
 
-`cd `
+`cd KittenWhisker; mvn package`
 
 ### Install Depended Tools 
 
