@@ -4,13 +4,13 @@
  It generates symbol files for JIT compiled methods of Drivers and Executors which can be further
   used by Linux [`perf`](https://perf.wiki.kernel.org/index.php/Main_Page) tools.
 
-In this file, I will show how to <a name="configure">configure</a> and use KittenWhisker.
+In this file, I will show how to [configure KittenWhisker](#configure) and use KittenWhisker.
  
  
  
  
 
-## [Configure KittenWhisker](#configure)
+##  <a name="configure">Configure KittenWhisker</a> 
 
 ### Prepare Slaves File
 
