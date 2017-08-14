@@ -38,7 +38,7 @@ specific to the Driver/Executor process; and (2) generate symbol files for JIT m
     `sudo perf record -F 99 -g sleep 120`
     
     Note that, `sleep 120` will make perf to sample the usage for 2 mins, and KittenWhisker will insert
-    `-p` and '-o' right before sleep command, which specifies the PID to be monitored and the name of output
+    `-p` and `-o` right before sleep command, which specifies the PID to be monitored and the name of output
      file respectively.
 
 2. compose spark-submit command in start_app_cmd.sh. The below is an example of the command
