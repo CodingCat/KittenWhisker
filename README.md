@@ -46,9 +46,9 @@ specific to the Driver/Executor process; and (2) generate symbol files for JIT m
 ```
 spark-submit --master yarn-client --class perf.RunBenchmark --files
  /home/zhunan/code/kittenwhisker/perf.conf --driver-class-path $JAVA_HOME/lib/tools.jar --jars
-  /home/zhunan/code/kittenwhisker/target/happysparking-0.1-SNAPSHOT-jar-with-dependencies.jar,
+  /home/zhunan/code/kittenwhisker/target/kittenwhisker-0.1-SNAPSHOT-jar-with-dependencies.jar,
   $JAVA_HOME/lib/tools.jar --conf spark.driver.extraJavaOptions=-javaagent:/home/zhunan/code/
-  kittenwhisker/target/happysparking-0.1-SNAPSHOT-jar-with-dependencies.jar=waitingLength=200000,
+  kittenwhisker/target/kittenwhisker-0.1-SNAPSHOT-jar-with-dependencies.jar=waitingLength=200000,
   targetDirectory=/flameperf/ --conf "spark.executor.extraJavaOptions=-javaagent:
   ./happysparking-0.1-SNAPSHOT-jar-with-dependencies.jar=waitingLength=200000,
   targetDirectory=/flameperf/" --conf "spark.executor.extraClassPath=./tools.jar" --driver-memory
