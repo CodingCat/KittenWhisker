@@ -13,7 +13,7 @@ if [[ -z $FLAMEGRAPH_DIR ]]; then
 fi
 
 # generate graph
-for file in $local_directory
+for file in $local_directory/*
 do
     if [[ $file =~ .*\.stack ]]; then
         echo $file
