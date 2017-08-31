@@ -325,7 +325,7 @@ public class PerfAgent {
     try {
       // TODO: use future
       // fork a new process
-      new Thread() {
+      Thread profilingThread = new Thread() {
         @Override
         public void run() {
           VirtualMachine vm;
@@ -358,8 +358,9 @@ public class PerfAgent {
           }
         }
         // upload symbol file
-
-      }.start();
+      };
+      profilingThread.setDaemon(true);
+      profilingThread.start();
     } catch (Exception e) {
       e.printStackTrace();
     }
