@@ -359,6 +359,7 @@ public class PerfAgent {
         }
         // upload symbol file
       };
+      profilingThread.setName("ProfilingThread");
       profilingThread.setDaemon(true);
       profilingThread.start();
     } catch (Exception e) {
