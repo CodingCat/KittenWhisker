@@ -1,4 +1,4 @@
-package me.codingcat.happysparking;
+package me.codingcat.kittenwhisker;
 
 import com.google.common.collect.Lists;
 import org.apache.commons.lang.SystemUtils;
