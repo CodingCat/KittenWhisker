@@ -6,8 +6,6 @@ shared_directory="$1"
 
 local_directory="$2"
 
-NODES=`cat slaves`
-
 . spark_app_cmd.sh
 
 # collect files to local
