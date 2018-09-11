@@ -1,4 +1,4 @@
-package me.codingcat.happysparking;
+package me.codingcat.kittenwhisker;
 
 import java.io.*;
 import java.lang.instrument.Instrumentation;

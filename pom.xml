@@ -6,7 +6,7 @@
 
     <groupId>me.codingcat</groupId>
     <artifactId>kittenwhisker</artifactId>
-    <version>0.1-SNAPSHOT</version>
+    <version>0.1</version>
 
     <dependencies>
         <dependency>
@@ -95,7 +95,7 @@
                             <addDefaultSpecificationEntries>true</addDefaultSpecificationEntries>
                         </manifest>
                         <manifestEntries>
-                            <Premain-Class>me.codingcat.happysparking.PerfAgent</Premain-Class>
+                            <Premain-Class>me.codingcat.kittenwhisker.PerfAgent</Premain-Class>
                         </manifestEntries>
                     </archive>
                 </configuration>
