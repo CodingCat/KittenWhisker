@@ -17,11 +17,9 @@ public class StackTraceGenerator {
     return prefix + ".stack";
   }
 
-  String generateStackTrace(String localPath, String dataFileName) {
+  String generateStackTrace(String dataFileName) {
     try {
-      ProcessBuilder pb = new ProcessBuilder(
-              "perf", "script", "-i",
-              localPath + "/" + dataFileName);
+      ProcessBuilder pb = new ProcessBuilder("perf", "script", "-i", dataFileName);
       File outputFile = new File(outputStackFileName(dataFileName));
       System.out.println("produce output stack file at " + outputFile.getAbsolutePath());
       pb.redirectOutput(outputFile);
