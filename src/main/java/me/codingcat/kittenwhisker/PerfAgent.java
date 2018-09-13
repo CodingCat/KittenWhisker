@@ -278,16 +278,14 @@ public class PerfAgent {
     }
   }
 
-  private static void produceStackTrace(String workDir) {
+  private static void produceStackTrace() {
     StackTraceGenerator traceGenerator = new StackTraceGenerator();
-    stackFilePath = traceGenerator.generateStackTrace(workDir, perfDataFilePath);
+    stackFilePath = traceGenerator.generateStackTrace(perfDataFilePath);
   }
 
 
   public static void premain(final String args, final Instrumentation instrumentation) {
     try {
-      // TODO: use future
-      String workDir = System.getProperty("user.dir");
       // fork a new process
       new Thread() {
         @Override
@@ -313,7 +311,7 @@ public class PerfAgent {
             vm = VirtualMachine.attach(currentVMPID);
             vm.loadAgentPath(f.getAbsolutePath(), options);
             System.out.println("================producing stack trace===========");
-            produceStackTrace(workDir);
+            produceStackTrace();
             System.out.println("================DONE===========");
             uploadFiles(targetDirectory, pid);
           } catch (Exception e) {
