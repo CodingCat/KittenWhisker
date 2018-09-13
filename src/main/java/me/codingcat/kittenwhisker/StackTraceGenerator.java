@@ -20,7 +20,7 @@ public class StackTraceGenerator {
       ProcessBuilder pb = new ProcessBuilder(
               "perf", "script", "-i",
               localPath + "/" + dataFileName);
-      File outputFile = new File(localPath + "/" + outputStackFileName(dataFileName));
+      File outputFile = new File(outputStackFileName(dataFileName));
       System.out.println("produce output stack file at " + outputFile.getAbsolutePath());
       pb.redirectOutput(outputFile);
       Process p = pb.start();
