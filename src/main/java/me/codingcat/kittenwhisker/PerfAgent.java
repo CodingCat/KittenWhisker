@@ -186,27 +186,7 @@ public class PerfAgent {
     }
   }
 
-  private static String moveSymbolFileToCWD(int pid) {
-    String generatedPath = "/tmp/perf-" + pid + ".map";
-    try {
-      String ipAddr = Utils.localHostName().getHostAddress();
-      String targetPath = System.getProperty("java.io.tmpdir") + "/" + ipAddr + "-perf-" + pid +
-              ".map";
-      File generatedFilePath = new File(generatedPath);
-      Files.move(generatedFilePath.toPath(), new File(targetPath).toPath(),
-              StandardCopyOption.REPLACE_EXISTING);
-      return targetPath;
-    } catch (Exception e){
-      e.printStackTrace();
-      File f = new File(generatedPath);
-      if (f.exists()) {
-        f.delete();
-      }
-      return null;
-    }
-  }
-
-  private static String getPerfParams(int pid) {
+  private static String getPerfParams() {
     try {
       FileInputStream perfConfFile = new FileInputStream("./perf.conf");
       BufferedReader br = new BufferedReader(new InputStreamReader(perfConfFile));
@@ -222,7 +202,7 @@ public class PerfAgent {
   private static void startPerf(int pid) {
     // 1. read the file containing the parameters for building parameters
     try {
-      String parameters = getPerfParams(pid);
+      String parameters = getPerfParams();
       assert (parameters != null);
       // 2. start the process to start perf program
       List<String> l = new ArrayList<String>();
@@ -277,7 +257,7 @@ public class PerfAgent {
     }
   }
 
-  private static void uploadFiles(String targetDirectory, int currentVMPID) {
+  private static void uploadFiles(String workDir, String targetDirectory, int currentVMPID) {
     try {
       boolean uploadPerfDataFile = uploadFileToSharedDirectory(perfDataFilePath, targetDirectory);
       if (!uploadPerfDataFile) {
@@ -287,15 +267,49 @@ public class PerfAgent {
       if (!uploadSymbolFile) {
         throw new IOException("cannot upload symbol files for process " + currentVMPID);
       }
+      File localDir = new File(workDir);
+      File[] allPerfDataFiles = localDir.listFiles(new FilenameFilter() {
+        @Override
+        public boolean accept(File dir, String name) {
+          return name.endsWith(".stack");
+        }
+      });
+      if (allPerfDataFiles != null) {
+        for (File file : allPerfDataFiles) {
+          boolean uploadStackFiles = uploadFileToSharedDirectory(file.getAbsolutePath(),
+                  targetDirectory);
+          if (!uploadStackFiles) {
+            throw new IOException("cannot upload stacktrace files for process " + currentVMPID);
+          }
+        }
+      }
     } catch (IOException ioe) {
       ioe.printStackTrace();
       System.exit(1);
     }
   }
 
+  private static void produceStackTrace(String workDir) {
+    StackTraceGenerator traceGenerator = new StackTraceGenerator();
+    File localDir = new File(workDir);
+    File[] allPerfDataFiles = localDir.listFiles(new FilenameFilter() {
+      @Override
+      public boolean accept(File dir, String name) {
+        return name.endsWith(".data");
+      }
+    });
+    if (allPerfDataFiles != null) {
+      for (File file : allPerfDataFiles) {
+        traceGenerator.generateStackTrace(workDir, file.getName());
+      }
+    }
+  }
+
+
   public static void premain(final String args, final Instrumentation instrumentation) {
     try {
       // TODO: use future
+      String workDir = System.getProperty("user.dir");
       // fork a new process
       new Thread() {
         @Override
@@ -321,8 +335,8 @@ public class PerfAgent {
             vm = VirtualMachine.attach(currentVMPID);
             vm.loadAgentPath(f.getAbsolutePath(), options);
             System.out.println("================DONE===========");
-            symbolFilePath = moveSymbolFileToCWD(pid);
-            uploadFiles(targetDirectory, pid);
+            produceStackTrace(workDir);
+            uploadFiles(workDir, targetDirectory, pid);
           } catch (Exception e) {
             e.printStackTrace();
             System.exit(1);
@@ -334,6 +348,5 @@ public class PerfAgent {
     } catch (Exception e) {
       e.printStackTrace();
     }
-    // TODO： upload the generated file to target directory in shared storage system
   }
 }
