@@ -15,7 +15,7 @@ public class StackTraceGenerator {
     return prefix + ".stack";
   }
 
-  void generateStackTrace(String localPath, String dataFileName) {
+  String generateStackTrace(String localPath, String dataFileName) {
     try {
       ProcessBuilder pb = new ProcessBuilder(
               "perf", "script", "-i",
@@ -28,9 +28,11 @@ public class StackTraceGenerator {
       if (p.exitValue() != 0) {
          throw new Exception("process returns with " + p.exitValue());
       }
+      return outputFile.getAbsolutePath();
     } catch (Exception e) {
       e.printStackTrace();
       System.exit(1);
+      return null;
     }
   }
 }

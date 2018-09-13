@@ -18,6 +18,7 @@ public class PerfAgent {
 
   private static String perfDataFilePath;
   private static String symbolFilePath;
+  private static String stackFilePath;
 
   private static boolean hasResource(String path) {
     return PerfAgent.class.getResource(path) != null;
@@ -257,7 +258,7 @@ public class PerfAgent {
     }
   }
 
-  private static void uploadFiles(String workDir, String targetDirectory, int currentVMPID) {
+  private static void uploadFiles(String targetDirectory, int currentVMPID) {
     try {
       boolean uploadPerfDataFile = uploadFileToSharedDirectory(perfDataFilePath, targetDirectory);
       if (!uploadPerfDataFile) {
@@ -267,21 +268,9 @@ public class PerfAgent {
       if (!uploadSymbolFile) {
         throw new IOException("cannot upload symbol files for process " + currentVMPID);
       }
-      File localDir = new File(workDir);
-      File[] allPerfDataFiles = localDir.listFiles(new FilenameFilter() {
-        @Override
-        public boolean accept(File dir, String name) {
-          return name.endsWith(".stack");
-        }
-      });
-      if (allPerfDataFiles != null) {
-        for (File file : allPerfDataFiles) {
-          boolean uploadStackFiles = uploadFileToSharedDirectory(file.getAbsolutePath(),
-                  targetDirectory);
-          if (!uploadStackFiles) {
-            throw new IOException("cannot upload stacktrace files for process " + currentVMPID);
-          }
-        }
+      boolean uploadStackFiles = uploadFileToSharedDirectory(stackFilePath, targetDirectory);
+      if (!uploadStackFiles) {
+        throw new IOException("cannot upload stacktrace files for process " + currentVMPID);
       }
     } catch (IOException ioe) {
       ioe.printStackTrace();
@@ -291,18 +280,7 @@ public class PerfAgent {
 
   private static void produceStackTrace(String workDir) {
     StackTraceGenerator traceGenerator = new StackTraceGenerator();
-    File localDir = new File(workDir + "/tmp");
-    File[] allPerfDataFiles = localDir.listFiles(new FilenameFilter() {
-      @Override
-      public boolean accept(File dir, String name) {
-        return name.endsWith(".data");
-      }
-    });
-    if (allPerfDataFiles != null) {
-      for (File file : allPerfDataFiles) {
-        traceGenerator.generateStackTrace(workDir, file.getName());
-      }
-    }
+    stackFilePath = traceGenerator.generateStackTrace(workDir, perfDataFilePath);
   }
 
 
@@ -337,7 +315,7 @@ public class PerfAgent {
             System.out.println("================producing stack trace===========");
             produceStackTrace(workDir);
             System.out.println("================DONE===========");
-            uploadFiles(workDir, targetDirectory, pid);
+            uploadFiles(targetDirectory, pid);
           } catch (Exception e) {
             e.printStackTrace();
             System.exit(1);
