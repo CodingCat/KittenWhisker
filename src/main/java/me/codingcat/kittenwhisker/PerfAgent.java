@@ -277,34 +277,6 @@ public class PerfAgent {
     }
   }
 
-  private static void addReadPermissionToFiles() {
-    try {
-      ProcessBuilder pb = new ProcessBuilder();
-      pb.command("sudo", "chmod", "+r", perfDataFilePath, symbolFilePath);
-      Process p = pb.start();
-      new Thread() {
-        public void run() {
-          try {
-            String line;
-            BufferedReader reader = new BufferedReader(new InputStreamReader(p.getErrorStream()));
-            while ((line = reader.readLine()) != null) {
-              System.out.println(line);
-            }
-          } catch (Exception e) {
-            e.printStackTrace();
-          }
-        }
-      }.start();
-      p.waitFor();
-      if (p.exitValue() != 0) {
-        throw new Exception("process return with " + p.exitValue());
-      }
-    } catch (Exception e){
-      e.printStackTrace();
-      System.exit(1);
-    }
-  }
-
   private static void uploadFiles(String targetDirectory, int currentVMPID) {
     try {
       boolean uploadPerfDataFile = uploadFileToSharedDirectory(perfDataFilePath, targetDirectory);
@@ -349,7 +321,6 @@ public class PerfAgent {
             vm = VirtualMachine.attach(currentVMPID);
             vm.loadAgentPath(f.getAbsolutePath(), options);
             System.out.println("================DONE===========");
-            addReadPermissionToFiles();
             symbolFilePath = moveSymbolFileToCWD(pid);
             uploadFiles(targetDirectory, pid);
           } catch (Exception e) {
