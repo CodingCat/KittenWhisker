@@ -5,7 +5,7 @@ set -x
 local_directory="$1"
 
 # generate stack
-java -cp target/kittenwhisker-0.1-jar-with-dependencies.jar me.codingcat.happysparking.StackTraceGenerator $local_directory
+java -cp target/kittenwhisker-0.1-jar-with-dependencies.jar me.codingcat.kittenwhisker.StackTraceGenerator $local_directory
 
 if [[ -z $FLAMEGRAPH_DIR ]]; then
     echo "you have to define FLAMEGRAPH_DIR";
