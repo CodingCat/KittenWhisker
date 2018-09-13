@@ -18,6 +18,7 @@ public class PerfAgent {
 
   private static String perfDataFilePath;
   private static String symbolFilePath;
+  private static String stackFilePath;
 
   private static boolean hasResource(String path) {
     return PerfAgent.class.getResource(path) != null;
@@ -186,27 +187,7 @@ public class PerfAgent {
     }
   }
 
-  private static String moveSymbolFileToCWD(int pid) {
-    String generatedPath = "/tmp/perf-" + pid + ".map";
-    try {
-      String ipAddr = Utils.localHostName().getHostAddress();
-      String targetPath = System.getProperty("java.io.tmpdir") + "/" + ipAddr + "-perf-" + pid +
-              ".map";
-      File generatedFilePath = new File(generatedPath);
-      Files.move(generatedFilePath.toPath(), new File(targetPath).toPath(),
-              StandardCopyOption.REPLACE_EXISTING);
-      return targetPath;
-    } catch (Exception e){
-      e.printStackTrace();
-      File f = new File(generatedPath);
-      if (f.exists()) {
-        f.delete();
-      }
-      return null;
-    }
-  }
-
-  private static String getPerfParams(int pid) {
+  private static String getPerfParams() {
     try {
       FileInputStream perfConfFile = new FileInputStream("./perf.conf");
       BufferedReader br = new BufferedReader(new InputStreamReader(perfConfFile));
@@ -222,7 +203,7 @@ public class PerfAgent {
   private static void startPerf(int pid) {
     // 1. read the file containing the parameters for building parameters
     try {
-      String parameters = getPerfParams(pid);
+      String parameters = getPerfParams();
       assert (parameters != null);
       // 2. start the process to start perf program
       List<String> l = new ArrayList<String>();
@@ -287,15 +268,24 @@ public class PerfAgent {
       if (!uploadSymbolFile) {
         throw new IOException("cannot upload symbol files for process " + currentVMPID);
       }
+      boolean uploadStackFiles = uploadFileToSharedDirectory(stackFilePath, targetDirectory);
+      if (!uploadStackFiles) {
+        throw new IOException("cannot upload stacktrace files for process " + currentVMPID);
+      }
     } catch (IOException ioe) {
       ioe.printStackTrace();
       System.exit(1);
     }
   }
 
+  private static void produceStackTrace() {
+    StackTraceGenerator traceGenerator = new StackTraceGenerator();
+    stackFilePath = traceGenerator.generateStackTrace(perfDataFilePath);
+  }
+
+
   public static void premain(final String args, final Instrumentation instrumentation) {
     try {
-      // TODO: use future
       // fork a new process
       new Thread() {
         @Override
@@ -320,8 +310,9 @@ public class PerfAgent {
             System.out.println("================start generating symbol files ===========");
             vm = VirtualMachine.attach(currentVMPID);
             vm.loadAgentPath(f.getAbsolutePath(), options);
+            System.out.println("================producing stack trace===========");
+            produceStackTrace();
             System.out.println("================DONE===========");
-            symbolFilePath = moveSymbolFileToCWD(pid);
             uploadFiles(targetDirectory, pid);
           } catch (Exception e) {
             e.printStackTrace();
@@ -334,6 +325,5 @@ public class PerfAgent {
     } catch (Exception e) {
       e.printStackTrace();
     }
-    // TODO： upload the generated file to target directory in shared storage system
   }
 }
