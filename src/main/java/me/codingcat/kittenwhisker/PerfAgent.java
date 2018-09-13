@@ -291,7 +291,7 @@ public class PerfAgent {
 
   private static void produceStackTrace(String workDir) {
     StackTraceGenerator traceGenerator = new StackTraceGenerator();
-    File localDir = new File(workDir);
+    File localDir = new File(workDir + "/tmp");
     File[] allPerfDataFiles = localDir.listFiles(new FilenameFilter() {
       @Override
       public boolean accept(File dir, String name) {
