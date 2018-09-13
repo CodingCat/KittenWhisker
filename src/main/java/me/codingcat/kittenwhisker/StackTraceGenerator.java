@@ -1,7 +1,9 @@
 package me.codingcat.kittenwhisker;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FilenameFilter;
+import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
@@ -24,6 +26,19 @@ public class StackTraceGenerator {
       System.out.println("produce output stack file at " + outputFile.getAbsolutePath());
       pb.redirectOutput(outputFile);
       Process p = pb.start();
+      new Thread() {
+        public void run() {
+          try {
+            String line;
+            BufferedReader reader = new BufferedReader(new InputStreamReader(p.getErrorStream()));
+            while ((line = reader.readLine()) != null) {
+              System.out.println(line);
+            }
+          } catch (Exception e) {
+            e.printStackTrace();
+          }
+        }
+      }.start();
       p.waitFor();
       if (p.exitValue() != 0) {
          throw new Exception("process returns with " + p.exitValue());
