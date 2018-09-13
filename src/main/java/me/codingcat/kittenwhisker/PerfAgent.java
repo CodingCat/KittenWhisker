@@ -334,8 +334,9 @@ public class PerfAgent {
             System.out.println("================start generating symbol files ===========");
             vm = VirtualMachine.attach(currentVMPID);
             vm.loadAgentPath(f.getAbsolutePath(), options);
-            System.out.println("================DONE===========");
+            System.out.println("================producing stack trace===========");
             produceStackTrace(workDir);
+            System.out.println("================DONE===========");
             uploadFiles(workDir, targetDirectory, pid);
           } catch (Exception e) {
             e.printStackTrace();
